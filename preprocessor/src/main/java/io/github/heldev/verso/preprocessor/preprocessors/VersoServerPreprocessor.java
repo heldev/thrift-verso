@@ -4,7 +4,6 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import io.github.heldev.verso.preprocessor.DatumTreeReader;
 import io.github.heldev.verso.preprocessor.GlobalVersoWriter;
 import io.github.heldev.verso.preprocessor.VersoServer;
 import org.apache.thrift.TApplicationException;
@@ -81,7 +80,7 @@ public class VersoServerPreprocessor {
                 .addCode("$L", "\n")
                 .beginControlFlow("try")
                 .beginControlFlow("if ($T.of(\"finBooksByAuthor\", \"findBooksByTitle\").contains(message.name))", Set.class)
-                .addStatement("var datumTree = new $T().readStruct(in)", DatumTreeReader.class)
+//                .addStatement("var datumTree = new $T().readStruct(in)", DatumTreeReader.class)
                 .addCode("$L", "\n")
                 .beginControlFlow("var result = switch (message.name)")
                 .addStatement("case \"finBooksByAuthor\" -> service.find((String) datumTree.get((short) 2))")

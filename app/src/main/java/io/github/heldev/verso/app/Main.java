@@ -33,7 +33,7 @@ public class Main {
 //        standardClient();
 //
 //        readWriteDto();
-        parseThrift();
+//        parseThrift();
     }
 
     private void standardClient() throws TException {
@@ -69,7 +69,7 @@ public class Main {
     }
 
     private void readWriteDto() throws TException {
-        var protocol = new TCompactProtocol(new TMemoryBuffer(1024));
+        var protocol = new TCompactProtocol(new TMemoryBuffer(1024 * 1024));
         var bookDto = new BookDto("Code Complete 2", List.of("McConnell"));
         bookDto.write(protocol);
     }

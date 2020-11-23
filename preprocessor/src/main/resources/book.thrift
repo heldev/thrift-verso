@@ -2,10 +2,11 @@ namespace java io.github.heldev.verso.app
 
 struct BookDto {
     1: required string title
-    2: list<string> authors = []
+    2: list<set<list<string>>> authors = []
     3: optional Type type
-    4: list<Publisher> publishers
-    5: map<i32, string> reviews = {}
+    4: list<list<list<Publisher>>> publishers
+    5: map<set<i32>, list<string>> reviews
+    6: optional MyUnion myUnion
 }
 
 enum Type {
@@ -26,4 +27,15 @@ service Library {
 union MyUnion {
     1: MyUnion myUnion
     2: string myEnd
+    3: HList hlist
+}
+
+struct HList {
+    1: optional HList tail
+    2: string val
+}
+
+struct NeLi {
+    1: list<list<list<set<string>>>> woow
+    2: map<set<list<i32>>, set<list<BookDto>>> complexity
 }
