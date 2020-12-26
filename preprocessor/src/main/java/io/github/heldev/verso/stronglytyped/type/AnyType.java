@@ -1,6 +1,7 @@
 package io.github.heldev.verso.stronglytyped.type;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,8 +41,12 @@ public abstract class AnyType {
 		return new ConcreteType(name, parameters);
 	}
 
-	public static TemplateType template(String name, AnyType... parameters) {
+	public static TemplateType template(String name, List<AnyType> parameters) {
 		return new TemplateType(name, parameters);
+	}
+
+	public static TemplateType template(String name, AnyType... parameters) {
+		return new TemplateType(name, List.of(parameters));
 	}
 
 	public static ParameterType parameter(String name) {

@@ -1,6 +1,6 @@
 package io.github.heldev.verso.app.man;
 
-import io.github.heldev.verso.preprocessor.VersoConverter;
+import io.github.heldev.verso.annotation.VersoConverter;
 
 import java.util.ArrayList;
 import java.util.Date;

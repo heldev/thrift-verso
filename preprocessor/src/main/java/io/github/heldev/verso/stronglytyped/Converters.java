@@ -12,8 +12,8 @@ import static java.util.stream.Collectors.toSet;
 public class Converters {
 	private final Set<Converter> allConverters;
 
-	public Converters(Converter... converters) {
-		this.allConverters = Set.of(converters);
+	public Converters(Set<Converter> converters) {
+		this.allConverters = Set.copyOf(converters);
 	}
 
 	public Optional<List<Converter>> canDo(Conversion conversion) {

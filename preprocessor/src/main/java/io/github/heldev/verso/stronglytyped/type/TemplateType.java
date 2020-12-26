@@ -5,8 +5,8 @@ import java.util.Objects;
 
 final public class TemplateType extends ParameterizedType<AnyType> {
 
-	TemplateType(String name, AnyType... parameters) {
-		super(name, List.of(parameters));
+	TemplateType(String name, List<AnyType> parameters) {
+		super(name, parameters);
 	}
 
 	@Override
