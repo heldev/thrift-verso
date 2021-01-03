@@ -1,4 +1,4 @@
-package io.github.heldev.verso.annotation;
+package io.github.heldev.verso.interfaces;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;

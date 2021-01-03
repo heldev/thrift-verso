@@ -1,10 +1,10 @@
-package io.github.heldev.verso.annotation.preprocessors;
+package io.github.heldev.verso.preprocessors;
 
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.WildcardTypeName;
-import io.github.heldev.verso.annotation.AnyTypeConvertingVisitor;
-import io.github.heldev.verso.annotation.VersoConverter;
+import io.github.heldev.verso.AnyTypeConvertingVisitor;
+import io.github.heldev.verso.interfaces.VersoConverter;
 import io.github.heldev.verso.stronglytyped.Converter;
 import io.github.heldev.verso.stronglytyped.Converters;
 import io.github.heldev.verso.stronglytyped.type.TemplateType;

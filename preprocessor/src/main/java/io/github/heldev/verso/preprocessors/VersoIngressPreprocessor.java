@@ -1,4 +1,4 @@
-package io.github.heldev.verso.annotation.preprocessors;
+package io.github.heldev.verso.preprocessors;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -13,8 +13,9 @@ import com.twitter.scrooge.ast.StructLike;
 import com.twitter.scrooge.ast.TBinary$;
 import com.twitter.scrooge.ast.TString$;
 import com.twitter.scrooge.frontend.ThriftParser;
-import io.github.heldev.verso.annotation.IngressField;
-import io.github.heldev.verso.annotation.VersoIngress;
+import io.github.heldev.verso.interfaces.IngressField;
+import io.github.heldev.verso.interfaces.VersoIngress;
+import io.github.heldev.verso.stronglytyped.Converters;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 import scala.Option;
@@ -38,18 +39,25 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 
 public class VersoIngressPreprocessor {
+	private final Converters converters;
 	private final Filer filer;
 	private final Elements elementUtils;
 	private final Types typeUtils;
 	private final ThriftParser thriftParser;
 
 
-	public VersoIngressPreprocessor(ProcessingEnvironment processingEnvironment, ThriftParser thriftParser) {
+	public VersoIngressPreprocessor(
+			Converters converters,
+			ProcessingEnvironment processingEnvironment,
+			ThriftParser thriftParser) {
+		this.converters = converters;
 		this.elementUtils = processingEnvironment.getElementUtils();
 		this.typeUtils = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();
@@ -59,23 +67,18 @@ public class VersoIngressPreprocessor {
 	public void generateReaders(RoundEnvironment roundEnv) {
 		for (var type : typesIn(roundEnv.getElementsAnnotatedWith(VersoIngress.class))) {
 			if (type.getKind().isClass()) {
-				var packageName = elementUtils.getPackageOf(type).toString();
-				var typeSpec = buildTypeSpec(type, getThriftStruct(type));
-
-				try {
-
-					JavaFile.builder(packageName, typeSpec)
-							.indent("\t")
-							.build()
-							.writeTo(filer);
-
-				} catch (IOException e) {
-					throw new UncheckedIOException(e);
-				}
+				generateReader(type);
 			} else {
 				throw new RuntimeException("Only classes are supported at this moment");
 			}
 		}
+	}
+
+	private void generateReader(TypeElement clazz) {
+		var packageName = elementUtils.getPackageOf(clazz).toString();
+		var typeSpec = buildTypeSpec(clazz, getThriftStruct(clazz));
+
+		saveAsFile(packageName, typeSpec);
 	}
 
 	private StructLike getThriftStruct(TypeElement clazz) {
@@ -92,7 +95,7 @@ public class VersoIngressPreprocessor {
 		var builderType = buildBuilderType(constructor, thriftStruct);
 
 		return TypeSpec.classBuilder(clazz.getSimpleName() + "$$IngressReader")
-//                .addMethod(buildReadMethod(clazz, thriftStruct))
+				.addMethod(buildReadMethod(clazz, thriftStruct))
 				.addType(builderType)
 //				.addMethod(buildReadFieldMethod())
 //				.addType(buildBuilderClass())
@@ -140,6 +143,7 @@ public class VersoIngressPreprocessor {
 
 
 		return TypeSpec.classBuilder("Builder")
+				.addModifiers(PRIVATE, STATIC)
 				.addFields(builderFields)
 				.addMethod(MethodSpec.methodBuilder("build")
 						.returns(TypeName.get(constructor.getEnclosingElement().asType()))
@@ -147,18 +151,18 @@ public class VersoIngressPreprocessor {
 						.addCode("\n")
 						.addCode("return new $L", constructor.getEnclosingElement().getSimpleName())
 						.addCode(constructor.getParameters().stream().map(parameter -> {
-									var id = parameter.getAnnotation(IngressField.class).id();
-									var thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
+							var id = parameter.getAnnotation(IngressField.class).id();
+							var thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
 
-									var isOptional = typeUtils.isSameType(
-											typeUtils.erasure(parameter.asType()),
-											typeUtils.getDeclaredType(elementUtils.getTypeElement(Optional.class.getCanonicalName())));
+							var isOptional = typeUtils.isSameType(
+									typeUtils.erasure(parameter.asType()),
+									typeUtils.getDeclaredType(elementUtils.getTypeElement(Optional.class.getCanonicalName())));
 
 
-									return isOptional
-											? CodeBlock.of("$T.ofNullable($L)", Optional.class, parameter.getSimpleName())
-											: CodeBlock.of(parameter.getSimpleName().toString());
-								}).collect(CodeBlock.joining(",\n\t\t", "(\n\t\t", ");")))
+							return isOptional
+									? CodeBlock.of("$T.ofNullable($L)", Optional.class, parameter.getSimpleName())
+									: CodeBlock.of(parameter.getSimpleName().toString());
+						}).collect(CodeBlock.joining(",\n\t\t", "(\n\t\t", ");")))
 						.build())
 				.addMethod(throwIfInvalidMethod)
 				.build();
@@ -187,6 +191,7 @@ public class VersoIngressPreprocessor {
 		if (scroogeField.requiredness().isDefault() && parameterType.getKind().isPrimitive()) {
 			return TypeName.get(parameterType).box();
 		} else if (typeUtils.isAssignable(typeUtils.erasure(parameterType), typeUtils.getDeclaredType(elementUtils.getTypeElement(Optional.class.getName())))) {
+			//todo vavr, guava, custom optional
 			return ((ParameterizedTypeName) TypeName.get(parameterType)).typeArguments.get(0);
 		} else {
 			return TypeName.get(parameterType);
@@ -200,7 +205,23 @@ public class VersoIngressPreprocessor {
 				.returns(TypeName.get(clazz.asType()))
 				.addParameter(TProtocol.class, "protocol")
 				.addException(TException.class)
+				.addStatement("var builder = new Builder()") //todo possible name collision
+				.addStatement("//todo builder fields population")
+				.addStatement("return builder.build()") //todo convert exception
 				.build();
+	}
+
+	private void saveAsFile(String packageName, TypeSpec typeSpec) {
+		try {
+
+			JavaFile.builder(packageName, typeSpec)
+					.indent("\t")
+					.build()
+					.writeTo(filer);
+
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
 	}
 
 }

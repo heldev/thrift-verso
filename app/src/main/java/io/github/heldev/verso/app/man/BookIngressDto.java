@@ -1,7 +1,7 @@
 package io.github.heldev.verso.app.man;
 
-import io.github.heldev.verso.annotation.IngressField;
-import io.github.heldev.verso.annotation.VersoIngress;
+import io.github.heldev.verso.interfaces.IngressField;
+import io.github.heldev.verso.interfaces.VersoIngress;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,11 +1,11 @@
-package io.github.heldev.verso.annotation.preprocessors;
+package io.github.heldev.verso.preprocessors;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import io.github.heldev.verso.annotation.GlobalVersoWriter;
-import io.github.heldev.verso.annotation.VersoServer;
+import io.github.heldev.verso.GlobalVersoWriter;
+import io.github.heldev.verso.interfaces.VersoServer;
 import org.apache.thrift.TApplicationException;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;

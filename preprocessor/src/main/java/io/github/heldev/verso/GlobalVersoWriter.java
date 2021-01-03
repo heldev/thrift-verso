@@ -1,5 +1,6 @@
-package io.github.heldev.verso.annotation;
+package io.github.heldev.verso;
 
+import io.github.heldev.verso.interfaces.VersoWriter;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 

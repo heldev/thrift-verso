@@ -1,10 +1,16 @@
-package io.github.heldev.verso.annotation;
+package io.github.heldev.verso;
 
 import com.twitter.scrooge.frontend.Importer$;
 import com.twitter.scrooge.frontend.ThriftParser;
-import io.github.heldev.verso.annotation.preprocessors.VersoConverterPreprocessor;
-import io.github.heldev.verso.annotation.preprocessors.VersoEgressPreprocessor;
-import io.github.heldev.verso.annotation.preprocessors.VersoIngressPreprocessor;
+import io.github.heldev.verso.interfaces.VersoConverter;
+import io.github.heldev.verso.interfaces.VersoEgress;
+import io.github.heldev.verso.interfaces.VersoIngress;
+import io.github.heldev.verso.interfaces.VersoServer;
+import io.github.heldev.verso.preprocessors.VersoConverterPreprocessor;
+import io.github.heldev.verso.preprocessors.VersoEgressPreprocessor;
+import io.github.heldev.verso.preprocessors.VersoIngressPreprocessor;
+import io.github.heldev.verso.preprocessors.reader.ReaderBuilder;
+import io.github.heldev.verso.preprocessors.reader.ReaderRenderer;
 import scala.collection.concurrent.TrieMap;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -13,6 +19,8 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -43,7 +51,15 @@ public class AnnotationPreprocessor extends AbstractProcessor {
 			//todo process converters once
 			var converters = new VersoConverterPreprocessor(processingEnvironment).findConverters(roundEnv);
 
-			new VersoIngressPreprocessor(processingEnvironment, thriftParser).generateReaders(roundEnv);
+			new ReaderBuilder(converters, processingEnvironment, thriftParser).generateReaders(roundEnv).stream()
+					.map(new ReaderRenderer()::render)
+					.forEach(file -> {
+						try {
+							file.writeTo(processingEnvironment.getFiler());
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					});
 			new VersoEgressPreprocessor(processingEnvironment, thriftParser).generateWriters(roundEnv);
 //            new VersoServerPreprocessor(processingEnvironment).generateProcessors(roundEnv);
 			return true;

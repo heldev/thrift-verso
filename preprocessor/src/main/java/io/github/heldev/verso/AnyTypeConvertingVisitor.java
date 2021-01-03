@@ -1,4 +1,4 @@
-package io.github.heldev.verso.annotation;
+package io.github.heldev.verso;
 
 import io.github.heldev.verso.stronglytyped.type.AnyType;
 import io.github.heldev.verso.stronglytyped.type.TemplateType;

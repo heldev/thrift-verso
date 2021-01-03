@@ -3,4 +3,5 @@
 .DS_Store
 app/target/
 gen-java/
+interfaces/target/
 preprocessor/target/

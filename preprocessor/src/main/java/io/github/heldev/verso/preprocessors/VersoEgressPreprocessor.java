@@ -1,4 +1,4 @@
-package io.github.heldev.verso.annotation.preprocessors;
+package io.github.heldev.verso.preprocessors;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -24,9 +24,9 @@ import com.twitter.scrooge.ast.TI32$;
 import com.twitter.scrooge.ast.TI64$;
 import com.twitter.scrooge.ast.TString$;
 import com.twitter.scrooge.frontend.ThriftParser;
-import io.github.heldev.verso.annotation.EgressField;
-import io.github.heldev.verso.annotation.VersoEgress;
-import io.github.heldev.verso.annotation.VersoWriter;
+import io.github.heldev.verso.interfaces.EgressField;
+import io.github.heldev.verso.interfaces.VersoEgress;
+import io.github.heldev.verso.interfaces.VersoWriter;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TField;
 import org.apache.thrift.protocol.TList;

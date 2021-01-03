@@ -32,12 +32,6 @@ public class Converters {
 				.map(converters -> prepend(converter, converters));
 	}
 
-	private <T> List<T> prepend(T item, List<T> list) {
-
-		return Stream.concat(Stream.of(item), list.stream())
-				.collect(toList());
-	}
-
 	private Optional<List<Converter>> canDoAll(Set<Conversion> subConversions) {
 
 		Set<Optional<List<Converter>>> subConverters = subConversions.stream()
@@ -59,6 +53,12 @@ public class Converters {
 		return setOfOptionalLists.stream()
 				.flatMap(Optional::stream)
 				.flatMap(Collection::stream)
+				.collect(toList());
+	}
+
+	private <T> List<T> prepend(T item, List<T> list) {
+
+		return Stream.concat(Stream.of(item), list.stream())
 				.collect(toList());
 	}
 }
