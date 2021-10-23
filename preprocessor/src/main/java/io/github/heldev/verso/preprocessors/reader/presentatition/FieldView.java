@@ -1,10 +1,6 @@
-package io.github.heldev.verso.preprocessors.reader;
+package io.github.heldev.verso.preprocessors.reader.presentatition;
 
 import com.squareup.javapoet.TypeName;
-import com.twitter.scrooge.ast.BaseType;
-import com.twitter.scrooge.ast.FieldType;
-
-import java.util.List;
 
 //todo defaults
 public class FieldView {

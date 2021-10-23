@@ -10,9 +10,9 @@ public class GlobalVersoWriter implements VersoWriter<Object> {
 
 	public void write(Object object, TProtocol protocol) throws TException {
 		try {
-			var writerClassName = object.getClass().getCanonicalName() + "$$VersoWriter";
+			String writerClassName = object.getClass().getCanonicalName() + "$$VersoWriter";
 			Class<VersoWriter<? super Object>> writerClass = (Class) Class.forName(writerClassName);
-			var writer = writerClass.getDeclaredConstructor().newInstance();
+			VersoWriter<? super Object> writer = writerClass.getDeclaredConstructor().newInstance();
 
 			writer.write(object, protocol);
 

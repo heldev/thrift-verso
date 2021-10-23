@@ -44,6 +44,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -85,7 +86,7 @@ public class VersoEgressPreprocessor {
 	}
 
 	private StructLike getThriftStruct(TypeElement clazz) {
-		var annotation = clazz.getAnnotation(VersoEgress.class);
+		VersoEgress annotation = clazz.getAnnotation(VersoEgress.class);
 
 		return thriftParser.parseFile(annotation.thriftFile())
 				.structs()
@@ -95,7 +96,7 @@ public class VersoEgressPreprocessor {
 
 	private TypeSpec buildTypeSpec(TypeElement clazz, StructLike thriftStruct) {
 
-		var parameterizedVersoWriter = ParameterizedTypeName.get(
+		ParameterizedTypeName parameterizedVersoWriter = ParameterizedTypeName.get(
 				ClassName.get(VersoWriter.class),
 				TypeName.get(clazz.asType()));
 
@@ -131,8 +132,8 @@ public class VersoEgressPreprocessor {
 	}
 
 	private CodeBlock buildField(StructLike scroogeStruct, ExecutableElement method) {
-		var annotation = method.getAnnotation(EgressField.class);
-		var scroogeField = getScroogeField(scroogeStruct, annotation);
+		EgressField annotation = method.getAnnotation(EgressField.class);
+		Field scroogeField = getScroogeField(scroogeStruct, annotation);
 
 		return CodeBlock.builder()
 				.addStatement("protocol.writeFieldBegin(new $T($S, $T.$L, (short) $L))",
@@ -229,16 +230,15 @@ public class VersoEgressPreprocessor {
 
 	private String getTtype(FieldType scroogeType) {
 
-		Map<BaseType, String> baseTypes = Map.of(
-			TBool$.MODULE$, "Bool",
-			TByte$.MODULE$, "Byte",
-			TI16$.MODULE$, "I16",
-			TI32$.MODULE$, "I32",
-			TI64$.MODULE$, "I64",
-			TDouble$.MODULE$, "Double",
-			TString$.MODULE$, "String",
-			TBinary$.MODULE$, "Binary"
-		);
+		Map<BaseType, String> baseTypes = new HashMap<>();
+		baseTypes.put(TBool$.MODULE$, "Bool");
+		baseTypes.put(TByte$.MODULE$, "Byte");
+		baseTypes.put(TI16$.MODULE$, "I16");
+		baseTypes.put(TI32$.MODULE$, "I32");
+		baseTypes.put(TI64$.MODULE$, "I64");
+		baseTypes.put(TDouble$.MODULE$, "Double");
+		baseTypes.put(TString$.MODULE$, "String");
+		baseTypes.put(TBinary$.MODULE$, "Binary");
 
 		if (baseTypes.containsKey(scroogeType)) {
 			return baseTypes.get(scroogeType);

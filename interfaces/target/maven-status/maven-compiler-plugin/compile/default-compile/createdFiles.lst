@@ -1,8 +1,8 @@
-io/github/heldev/verso/annotation/VersoWriter.class
-io/github/heldev/verso/annotation/IngressField.class
-io/github/heldev/verso/annotation/EgressField.class
-io/github/heldev/verso/annotation/VersoConverter.class
-io/github/heldev/verso/annotation/VersoIngress.class
-io/github/heldev/verso/annotation/VersoMethod.class
-io/github/heldev/verso/annotation/VersoServer.class
-io/github/heldev/verso/annotation/VersoEgress.class
+io/github/heldev/verso/interfaces/VersoServer.class
+io/github/heldev/verso/interfaces/VersoConverter.class
+io/github/heldev/verso/interfaces/VersoEgress.class
+io/github/heldev/verso/interfaces/IngressField.class
+io/github/heldev/verso/interfaces/VersoMethod.class
+io/github/heldev/verso/interfaces/EgressField.class
+io/github/heldev/verso/interfaces/VersoWriter.class
+io/github/heldev/verso/interfaces/VersoIngress.class

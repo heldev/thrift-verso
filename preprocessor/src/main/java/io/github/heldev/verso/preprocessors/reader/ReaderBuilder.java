@@ -11,6 +11,8 @@ import com.twitter.scrooge.ast.TString$;
 import com.twitter.scrooge.frontend.ThriftParser;
 import io.github.heldev.verso.interfaces.IngressField;
 import io.github.heldev.verso.interfaces.VersoIngress;
+import io.github.heldev.verso.preprocessors.reader.presentatition.FieldView;
+import io.github.heldev.verso.preprocessors.reader.presentatition.View;
 import io.github.heldev.verso.stronglytyped.Converters;
 import scala.Option;
 
@@ -20,16 +22,20 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.partitioningBy;
-import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Collectors.toUnmodifiableSet;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.util.ElementFilter.constructorsIn;
 import static javax.lang.model.util.ElementFilter.typesIn;
 
@@ -54,16 +60,16 @@ public class ReaderBuilder {
 
 	public Set<View> generateReaders(RoundEnvironment roundEnv) {
 
-		var collect = typesIn(roundEnv.getElementsAnnotatedWith(VersoIngress.class)).stream()
+		Map<Boolean, List<TypeElement>> collect = typesIn(roundEnv.getElementsAnnotatedWith(VersoIngress.class)).stream()
 				.filter(type -> type.getKind().isClass())
 				.collect(partitioningBy(type -> type.getKind().isClass()));
 
-		var nonClasses = collect.getOrDefault(false, List.of());
+		List<TypeElement> nonClasses = collect.getOrDefault(false, emptyList());
 		if (nonClasses.isEmpty()) {
 
 			return collect.getOrDefault(true, emptyList()).stream()
 					.map(this::generateReader)
-					.collect(toUnmodifiableSet());
+					.collect(toSet());
 
 		} else {
 			throw new RuntimeException("Only classes are supported at this moment, offenders: " + nonClasses);
@@ -80,17 +86,17 @@ public class ReaderBuilder {
 	}
 
 	private List<FieldView> buildFields(TypeElement clazz) {
-		var constructor = getVersoConstructor(clazz);
-		var thriftStruct = getThriftStruct(clazz);
+		ExecutableElement constructor = getVersoConstructor(clazz);
+		StructLike thriftStruct = getThriftStruct(clazz);
 
 		return constructor
 				.getParameters().stream()
 				.map(parameter -> buildField(thriftStruct, parameter))
-				.collect(toUnmodifiableList());
+				.collect(toList());
 	}
 
 	private FieldView buildField(StructLike thriftStruct, VariableElement parameter) {
-		var thriftField = getThriftField(thriftStruct, parameter);
+		Field thriftField = getThriftField(thriftStruct, parameter);
 
 		if (! isOptional(parameter) && (thriftField.requiredness().isOptional() || thriftField.requiredness().isDefault() && defaultsToNull(thriftField))) {
 			throw new RuntimeException("thrift definition with possible null " + thriftField + ", " + parameter);
@@ -115,7 +121,7 @@ public class ReaderBuilder {
 	}
 
 	private StructLike getThriftStruct(TypeElement clazz) {
-		var annotation = clazz.getAnnotation(VersoIngress.class);
+		VersoIngress annotation = clazz.getAnnotation(VersoIngress.class);
 
 		return thriftParser.parseFile(annotation.thriftFile())
 				.structs()
@@ -132,8 +138,8 @@ public class ReaderBuilder {
 		try {
 			Option<RHS> aDefault = (Option<RHS>) thriftField.getClass().getDeclaredMethod("default").invoke(thriftField);
 
-			var defaultsToNull = thriftField.requiredness().isDefault() && aDefault.isEmpty() && (
-					Set.of(TBinary$.MODULE$, TString$.MODULE$).contains(thriftField.fieldType())
+			boolean defaultsToNull = thriftField.requiredness().isDefault() && aDefault.isEmpty() && (
+					asList(TBinary$.MODULE$, TString$.MODULE$).contains(thriftField.fieldType())
 							|| thriftField.fieldType() instanceof NamedType);
 
 			return defaultsToNull;
@@ -143,7 +149,7 @@ public class ReaderBuilder {
 	}
 
 	private TypeName getBuilderFieldType(Field thriftField, VariableElement parameter) {
-		var parameterType = parameter.asType();
+		TypeMirror parameterType = parameter.asType();
 
 		if (parameterType.getKind().isPrimitive() && ! thriftField.requiredness().isDefault()) {
 			return TypeName.get(parameterType).box();
@@ -164,7 +170,7 @@ public class ReaderBuilder {
 
 	private Field getThriftField(StructLike thriftStruct, VariableElement parameter) {
 		//todo annotation safety
-		var id = parameter.getAnnotation(IngressField.class).id();
+		int id = parameter.getAnnotation(IngressField.class).id();
 
 		return thriftStruct.fields().find(field -> field.index() == id).get();
 	}

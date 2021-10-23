@@ -27,7 +27,7 @@ public class ParameterType extends AnyType {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		var that = (ParameterType) o;
+		ParameterType that = (ParameterType) o;
 		return Objects.equals(name, that.name);
 	}
 

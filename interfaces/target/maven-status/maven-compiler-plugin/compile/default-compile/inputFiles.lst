@@ -1,8 +1,8 @@
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoConverter.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoEgress.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoIngress.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/IngressField.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoMethod.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoWriter.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/EgressField.java
-/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/annotation/VersoServer.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoConverter.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoServer.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/IngressField.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/EgressField.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoIngress.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoWriter.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoMethod.java
+/Users/hennadii/GitHub/thrift-verso/interfaces/src/main/java/io/github/heldev/verso/interfaces/VersoEgress.java

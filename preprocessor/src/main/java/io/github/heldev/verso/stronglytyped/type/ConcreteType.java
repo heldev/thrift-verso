@@ -3,10 +3,12 @@ package io.github.heldev.verso.stronglytyped.type;
 import java.util.List;
 import java.util.Objects;
 
+import static java.util.Arrays.asList;
+
 final public class ConcreteType extends ParameterizedType<ConcreteType> {
 
 	ConcreteType(String name, ConcreteType... parameters) {
-		super(name, List.of(parameters));
+		super(name, asList(parameters));
 	}
 
 	@Override
@@ -22,7 +24,7 @@ final public class ConcreteType extends ParameterizedType<ConcreteType> {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		var that = (ConcreteType) o;
+		ConcreteType that = (ConcreteType) o;
 		return Objects.equals(name, that.name) && Objects.equals(parameters, that.parameters);
 	}
 

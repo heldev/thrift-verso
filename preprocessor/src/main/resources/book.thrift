@@ -4,9 +4,15 @@ struct BookDto {
     1: required string title
     2: list<set<list<string>>> authors = []
     3: optional Type type
-    4: list<list<list<Publisher>>> publishers
+    4: list<list<list<Publisher>>> publishers = [[], [[]]]
+    40: required list<list<list<Publisher>>> publishers2 = [[[{"name": "Jo"}]]]
     5: map<set<i32>, list<string>> reviews
     6: optional MyUnion myUnion
+}
+
+struct RecursivePerson {
+    1: string name
+    2: RecursivePerson parent = {"name": "pname"}
 }
 
 enum Type {

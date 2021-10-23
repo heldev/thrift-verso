@@ -1,7 +1,10 @@
 package io.github.heldev.verso.stronglytyped.type;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+
+import static java.lang.String.format;
 
 
 abstract class ParameterizedType<T extends AnyType> extends AnyType {
@@ -21,15 +24,15 @@ abstract class ParameterizedType<T extends AnyType> extends AnyType {
 
 	private boolean doParametersMatch(ConcreteType concreteType, HashMap<ParameterType, ConcreteType> typeArgumentsAccumulator) {
 		if (parameters.size() != concreteType.parameters.size()) {
-			throw new IllegalArgumentException("Types should have the same number of parameters:\n %s\n%s".formatted(this, concreteType));
+			throw new IllegalArgumentException(format("Types should have the same number of parameters:\n %s\n%s", this, concreteType));
 		} else {
-			var parameterIterator = parameters.iterator();
-			var concreteParameterIterator = concreteType.parameters.iterator();
+			Iterator<T> parameterIterator = parameters.iterator();
+			Iterator<ConcreteType> concreteParameterIterator = concreteType.parameters.iterator();
 
-			var isMatch = true;
+			boolean isMatch = true;
 			while (parameterIterator.hasNext() && isMatch) {
-				var parameter = parameterIterator.next();
-				var concreteParameter = concreteParameterIterator.next();
+				T parameter = parameterIterator.next();
+				ConcreteType concreteParameter = concreteParameterIterator.next();
 
 				isMatch = parameter.matches(concreteParameter, typeArgumentsAccumulator);
 			}

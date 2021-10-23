@@ -22,6 +22,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,10 +43,10 @@ public class VersoServerPreprocessor {
 	public void generateProcessors(RoundEnvironment roundEnv) {
 		for (Element rootElement : roundEnv.getElementsAnnotatedWith(VersoServer.class)) {
 			if (rootElement.getKind().isClass()) {
-				var clazz = (TypeElement) rootElement;
+				TypeElement clazz = (TypeElement) rootElement;
 
 				String className = clazz.getSimpleName().toString() + "$$VersoProcessor";
-				var type = TypeSpec.classBuilder(className)
+				TypeSpec type = TypeSpec.classBuilder(className)
 						.addSuperinterface(TProcessor.class)
 						.addField(TypeName.get(clazz.asType()), "service", PRIVATE, FINAL)
 						.addMethod(MethodSpec.constructorBuilder().addParameter(TypeName.get(clazz.asType()), "service").addStatement("this.service = service").build())
@@ -101,16 +102,16 @@ public class VersoServerPreprocessor {
 
 	private MethodSpec buildReplyInvalidMethod() {
 
-		var body = "" +
+		String body = "" +
 				"out.writeMessageBegin(new $tMessage:T(message.name, $tMessageType:T.EXCEPTION, message.seqid));\n" +
 				"new $tApplicationException:T(TApplicationException.UNKNOWN_METHOD, \"Invalid method name: '\" + message.name + \"'\").write(out);\n" +
 				"out.writeMessageEnd();\n" +
 				"out.getTransport().flush();";
 
-		var bodyParameters = Map.of(
-				"tMessage", TMessage.class,
-				"tMessageType", TMessageType.class,
-				"tApplicationException", TApplicationException.class);
+		Map<String, Object> bodyParameters = new HashMap<>();
+		bodyParameters.put("tMessage", TMessage.class);
+		bodyParameters.put("tMessageType", TMessageType.class);
+		bodyParameters.put("tApplicationException", TApplicationException.class);
 
 		return MethodSpec.methodBuilder("replyInvalidMethod")
 				.addModifiers(PRIVATE)

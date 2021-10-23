@@ -11,6 +11,7 @@ import io.github.heldev.verso.preprocessors.VersoEgressPreprocessor;
 import io.github.heldev.verso.preprocessors.VersoIngressPreprocessor;
 import io.github.heldev.verso.preprocessors.reader.ReaderBuilder;
 import io.github.heldev.verso.preprocessors.reader.ReaderRenderer;
+import io.github.heldev.verso.stronglytyped.Converters;
 import scala.collection.concurrent.TrieMap;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -25,6 +26,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toSet;
 
 public class AnnotationPreprocessor extends AbstractProcessor {
 
@@ -49,7 +52,7 @@ public class AnnotationPreprocessor extends AbstractProcessor {
 	public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
 		try {
 			//todo process converters once
-			var converters = new VersoConverterPreprocessor(processingEnvironment).findConverters(roundEnv);
+			Converters converters = new VersoConverterPreprocessor(processingEnvironment).findConverters(roundEnv);
 
 			new ReaderBuilder(converters, processingEnvironment, thriftParser).generateReaders(roundEnv).stream()
 					.map(new ReaderRenderer()::render)
@@ -81,9 +84,8 @@ public class AnnotationPreprocessor extends AbstractProcessor {
 	@Override
 	public Set<String> getSupportedAnnotationTypes() {
 
-		return Set.of(VersoIngress.class, VersoEgress.class, VersoServer.class, VersoConverter.class)
-				.stream()
+		return Stream.of(VersoIngress.class, VersoEgress.class, VersoServer.class, VersoConverter.class)
 				.map(Class::getCanonicalName)
-				.collect(Collectors.toUnmodifiableSet());
+				.collect(toSet());
 	}
 }

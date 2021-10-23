@@ -21,7 +21,7 @@ final public class TemplateType extends ParameterizedType<AnyType> {
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		var that = (TemplateType) o;
+		TemplateType that = (TemplateType) o;
 		return Objects.equals(name, that.name) && Objects.equals(parameters, that.parameters);
 	}
 

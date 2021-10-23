@@ -9,6 +9,8 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+import java.util.List;
+
 import static java.util.stream.Collectors.toList;
 
 public class AnyTypeConvertingVisitor extends SimpleTypeVisitor8<AnyType, Void> {
@@ -20,17 +22,20 @@ public class AnyTypeConvertingVisitor extends SimpleTypeVisitor8<AnyType, Void> 
 
 	@Override
 	public AnyType visitPrimitive(PrimitiveType t, Void unused) {
-		return switch (t.getKind()) {
-			case INT -> AnyType.integer();
-			case BOOLEAN -> AnyType.string();
-			default -> throw new IllegalStateException("Unexpected value: " + t.getKind());
-		};
+		switch (t.getKind()) {
+			case INT:
+				return AnyType.integer();
+			case BOOLEAN:
+				return AnyType.string();
+			default:
+				throw new IllegalStateException("Unexpected value: " + t.getKind());
+		}
 	}
 
 	@Override
 	public TemplateType visitDeclared(DeclaredType type, Void unused) {
-		var name = ((TypeElement) type.asElement()).getQualifiedName().toString();
-		var parameters = type.getTypeArguments().stream().map(this::visit).collect(toList());
+		String name = ((TypeElement) type.asElement()).getQualifiedName().toString();
+		List<AnyType> parameters = type.getTypeArguments().stream().map(this::visit).collect(toList());
 		return AnyType.template(name, parameters);
 	}
 }

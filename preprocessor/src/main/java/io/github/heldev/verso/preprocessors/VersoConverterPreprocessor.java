@@ -7,15 +7,20 @@ import io.github.heldev.verso.AnyTypeConvertingVisitor;
 import io.github.heldev.verso.interfaces.VersoConverter;
 import io.github.heldev.verso.stronglytyped.Converter;
 import io.github.heldev.verso.stronglytyped.Converters;
+import io.github.heldev.verso.stronglytyped.type.AnyType;
 import io.github.heldev.verso.stronglytyped.type.TemplateType;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+
+import java.util.List;
 
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toSet;
@@ -40,14 +45,14 @@ public class VersoConverterPreprocessor {
 
 	private Converter buildConverter(ExecutableElement converterMethod) {
 		//todo move the check here
-		var from = converterMethod.getParameters().get(0).asType();
-		var to = converterMethod.getReturnType(); //todo check for null
+		TypeMirror from = converterMethod.getParameters().get(0).asType();
+		TypeMirror to = converterMethod.getReturnType(); //todo check for null
 
 		return new Converter(convertToModel(from), convertToModel(to));
 	}
 
 	private TemplateType convertToModel(TypeMirror typeMirror) {
-		var type =  typeMirror.accept(new AnyTypeConvertingVisitor(), null);
+		AnyType type =  typeMirror.accept(new AnyTypeConvertingVisitor(), null);
 
 		if (type instanceof TemplateType) {
 			return (TemplateType) type;
@@ -82,7 +87,7 @@ public class VersoConverterPreprocessor {
 	}
 
 	private boolean hasSingleWildcardFreeParameter(ExecutableElement converter) {
-		var parameters = converter.getParameters();
+		List<? extends VariableElement> parameters = converter.getParameters();
 
 		return parameters.size() == 1 && parameters.stream()
 				.allMatch(parameter -> isWildcardFree(TypeName.get(parameter.asType())));
@@ -103,7 +108,7 @@ public class VersoConverterPreprocessor {
 	}
 
 	private boolean isObject(TypeMirror typeMirror) {
-		var objectElement = elementUtils.getTypeElement(Object.class.getCanonicalName());
+		TypeElement objectElement = elementUtils.getTypeElement(Object.class.getCanonicalName());
 
 		return typeUtils.isSameType(typeMirror, typeUtils.getDeclaredType(objectElement));
 

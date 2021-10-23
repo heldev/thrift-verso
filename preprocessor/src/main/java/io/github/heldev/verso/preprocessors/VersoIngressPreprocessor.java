@@ -7,6 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.twitter.scrooge.ast.Field;
 import com.twitter.scrooge.ast.NamedType;
 import com.twitter.scrooge.ast.RHS;
 import com.twitter.scrooge.ast.StructLike;
@@ -26,6 +27,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.io.IOException;
@@ -37,8 +39,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -65,7 +67,7 @@ public class VersoIngressPreprocessor {
 	}
 
 	public void generateReaders(RoundEnvironment roundEnv) {
-		for (var type : typesIn(roundEnv.getElementsAnnotatedWith(VersoIngress.class))) {
+		for (TypeElement type : typesIn(roundEnv.getElementsAnnotatedWith(VersoIngress.class))) {
 			if (type.getKind().isClass()) {
 				generateReader(type);
 			} else {
@@ -75,14 +77,14 @@ public class VersoIngressPreprocessor {
 	}
 
 	private void generateReader(TypeElement clazz) {
-		var packageName = elementUtils.getPackageOf(clazz).toString();
-		var typeSpec = buildTypeSpec(clazz, getThriftStruct(clazz));
+		String packageName = elementUtils.getPackageOf(clazz).toString();
+		TypeSpec typeSpec = buildTypeSpec(clazz, getThriftStruct(clazz));
 
 		saveAsFile(packageName, typeSpec);
 	}
 
 	private StructLike getThriftStruct(TypeElement clazz) {
-		var annotation = clazz.getAnnotation(VersoIngress.class);
+		VersoIngress annotation = clazz.getAnnotation(VersoIngress.class);
 
 		return thriftParser.parseFile(annotation.thriftFile())
 				.structs()
@@ -91,8 +93,8 @@ public class VersoIngressPreprocessor {
 	}
 
 	private TypeSpec buildTypeSpec(TypeElement clazz, StructLike thriftStruct) {
-		var constructor = getVersoConstructor(clazz);
-		var builderType = buildBuilderType(constructor, thriftStruct);
+		ExecutableElement constructor = getVersoConstructor(clazz);
+		TypeSpec builderType = buildBuilderType(constructor, thriftStruct);
 
 		return TypeSpec.classBuilder(clazz.getSimpleName() + "$$IngressReader")
 				.addMethod(buildReadMethod(clazz, thriftStruct))
@@ -108,17 +110,17 @@ public class VersoIngressPreprocessor {
 	}
 
 	private TypeSpec buildBuilderType(ExecutableElement constructor, StructLike thriftStruct) {
-		var builderFields = buildBuilderFields(constructor, thriftStruct);
+		Iterable<FieldSpec> builderFields = buildBuilderFields(constructor, thriftStruct);
 
 		List<CodeBlock> blocks = constructor.getParameters().stream().flatMap(parameter -> {
-			var id = parameter.getAnnotation(IngressField.class).id();
-			var thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
+			int id = parameter.getAnnotation(IngressField.class).id();
+			Field thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
 
 			try {
 				Option<RHS> aDefault = (Option<RHS>) thriftField.getClass().getDeclaredMethod("default").invoke(thriftField);
 
-				var defaultsToNull = thriftField.requiredness().isDefault() && aDefault.isEmpty() && (
-						Set.of(TBinary$.MODULE$, TString$.MODULE$).contains(thriftField.fieldType())
+				boolean defaultsToNull = thriftField.requiredness().isDefault() && aDefault.isEmpty() && (
+						asList(TBinary$.MODULE$, TString$.MODULE$).contains(thriftField.fieldType())
 								|| thriftField.fieldType() instanceof NamedType);
 
 				if (thriftField.requiredness().isRequired() || defaultsToNull) {
@@ -132,7 +134,7 @@ public class VersoIngressPreprocessor {
 		}).collect(toList());
 
 
-		var throwIfInvalidMethod = MethodSpec.methodBuilder("throwIfInvalid")
+		MethodSpec throwIfInvalidMethod = MethodSpec.methodBuilder("throwIfInvalid")
 				.addCode("var missingRequiredFields = $T.<Stream<String>>of(\n\t\t", Stream.class)
 				.addCode(CodeBlock.join(blocks, ",\n\t\t"))
 				.addCode("\n).flatMap($T.identity()).collect($T.joining(\", \"));\n\n", Function.class, Collectors.class)
@@ -151,10 +153,10 @@ public class VersoIngressPreprocessor {
 						.addCode("\n")
 						.addCode("return new $L", constructor.getEnclosingElement().getSimpleName())
 						.addCode(constructor.getParameters().stream().map(parameter -> {
-							var id = parameter.getAnnotation(IngressField.class).id();
-							var thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
+							int id = parameter.getAnnotation(IngressField.class).id();
+							Field thriftField = thriftStruct.fields().find(field -> field.index() == id).get(); //todo
 
-							var isOptional = typeUtils.isSameType(
+							boolean isOptional = typeUtils.isSameType(
 									typeUtils.erasure(parameter.asType()),
 									typeUtils.getDeclaredType(elementUtils.getTypeElement(Optional.class.getCanonicalName())));
 
@@ -173,11 +175,11 @@ public class VersoIngressPreprocessor {
 		return constructor.getParameters()
 				.stream()
 				.map(parameter -> buildBuilderField(thriftStruct, parameter))
-				.collect(toUnmodifiableList());
+				.collect(toList());
 	}
 
 	private FieldSpec buildBuilderField(StructLike thriftStruct, VariableElement parameter) {
-		var builderFieldType = getBuilderFieldType(thriftStruct, parameter);
+		TypeName builderFieldType = getBuilderFieldType(thriftStruct, parameter);
 
 		return FieldSpec.builder(builderFieldType, parameter.getSimpleName().toString())
 				.build();
@@ -185,9 +187,9 @@ public class VersoIngressPreprocessor {
 
 	private TypeName getBuilderFieldType(StructLike thriftStruct, VariableElement parameter) {
 		//todo annotation safety
-		var scroogeField = thriftStruct.fields().find(field -> field.index() == parameter.getAnnotation(IngressField.class).id()).get();
+		Field scroogeField = thriftStruct.fields().find(field -> field.index() == parameter.getAnnotation(IngressField.class).id()).get();
 
-		var parameterType = parameter.asType();
+		TypeMirror parameterType = parameter.asType();
 		if (scroogeField.requiredness().isDefault() && parameterType.getKind().isPrimitive()) {
 			return TypeName.get(parameterType).box();
 		} else if (typeUtils.isAssignable(typeUtils.erasure(parameterType), typeUtils.getDeclaredType(elementUtils.getTypeElement(Optional.class.getName())))) {

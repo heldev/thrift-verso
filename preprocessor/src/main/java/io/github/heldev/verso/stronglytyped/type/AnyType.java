@@ -1,9 +1,13 @@
 package io.github.heldev.verso.stronglytyped.type;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
 
 public abstract class AnyType {
 	protected final String name; //tood maybe use Name
@@ -46,7 +50,7 @@ public abstract class AnyType {
 	}
 
 	public static TemplateType template(String name, AnyType... parameters) {
-		return new TemplateType(name, List.of(parameters));
+		return new TemplateType(name, asList(parameters));
 	}
 
 	public static ParameterType parameter(String name) {
@@ -55,10 +59,10 @@ public abstract class AnyType {
 
 	public Optional<Map<ParameterType, ConcreteType>> matches(ConcreteType concreteType) {
 
-		var typeArgumentsAccumulator = new HashMap<ParameterType, ConcreteType>();
+		HashMap<ParameterType, ConcreteType> typeArgumentsAccumulator = new HashMap<ParameterType, ConcreteType>();
 
 		return matches(concreteType, typeArgumentsAccumulator)
-				? Optional.of(Map.copyOf(typeArgumentsAccumulator))
+				? Optional.of(new HashMap<>(typeArgumentsAccumulator))
 				: Optional.empty();
 	}
 
